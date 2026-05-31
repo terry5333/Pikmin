@@ -31,7 +31,7 @@ export default async function handler(req, res) {
           type: "bubble",
           hero: {
             type: "image",
-            url: "https://i.imgur.com/your-image2.jpg", // ⚠️ 請替換為你實際的皮克敏圖片網址
+            url: "https://i.meee.com.tw/lih75Ti.jpg", // ⚠️ 請替換為你實際的皮克敏圖片網址
             size: "full",
             aspectRatio: "20:13",
             aspectMode: "cover"

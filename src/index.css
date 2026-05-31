@@ -1,4 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body { background: linear-gradient(135deg, #e0f2f1 0%, #bbdefb 100%); min-height: 100vh; font-family: 'Helvetica Neue', sans-serif; }
+
+body {
+  background-color: #f3f4f6; /* 乾淨的淺灰色背景 */
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,4 +1,4 @@
-const line = require('@line/bot-sdk');
+import * as line from '@line/bot-sdk';
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -23,21 +23,31 @@ async function handleEvent(event) {
       type: 'flex', altText: '歡迎加入！請綁定遊戲名稱', contents: getWelcomeFlex()
     });
   }
+
   if (event.type !== 'message' || event.message.type !== 'text') return null;
-  
   const text = event.message.text.trim();
+
+  // 👇 用來抓取群組 ID 的隱藏指令
+  if (text === '找id') {
+    const groupId = event.source.groupId;
+    if (groupId) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text', text: `這個群組的 ID 是：\n${groupId}\n\n請把它複製貼到 Vercel 的 TARGET_GROUP_ID 中。`
+      });
+    } else {
+      return client.replyMessage(event.replyToken, { type: 'text', text: '請在「群組」內輸入此指令，單線對話無法取得群組 ID 喔！' });
+    }
+  }
+
   if (text === '菇') {
-    return client.replyMessage(event.replyToken, {
-      type: 'flex', altText: '🍄 蘑菇控制面板', contents: getMushroomPanelFlex()
-    });
+    return client.replyMessage(event.replyToken, { type: 'flex', altText: '🍄 蘑菇面板', contents: getMushroomPanelFlex() });
   }
   if (text === '通知') {
-    return client.replyMessage(event.replyToken, {
-      type: 'flex', altText: '⚙️ 通知設定', contents: getNotificationFlex()
-    });
+    return client.replyMessage(event.replyToken, { type: 'flex', altText: '⚙️ 通知設定', contents: getNotificationFlex() });
   }
 }
 
+// ... 下方的 getMushroomPanelFlex, getWelcomeFlex, getNotificationFlex 函數保持原本的內容即可 ...
 function getMushroomPanelFlex() {
   return {
     type: "bubble", size: "kilo",

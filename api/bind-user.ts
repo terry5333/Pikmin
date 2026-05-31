@@ -9,21 +9,12 @@ export default async function handler(req: any, res: any) {
   
   const { groupId, userId, lineName, pictureUrl, gameName } = req.body;
   
-  // 取得群組 ID
-  const targetGroup = groupId || process.env.TARGET_GROUP_ID;
+  // 🔥 終極物理防禦：直接寫死你截圖裡的正確群組 ID，完全不依賴 process.env
+  const targetGroup = groupId || 'C37559d3c9937e6c7d230f2fa5383edf0';
 
-  // 🚨 防呆機制：檢查群組 ID 格式是否正確
-  if (!targetGroup) {
-    console.error('錯誤：找不到任何群組 ID');
-    return res.status(400).json({ error: '找不到群組 ID，請確認 Vercel 設定' });
-  }
-  
-  if (targetGroup.includes('-') || !targetGroup.startsWith('C')) {
-    console.error(`🚨 嚴重的格式錯誤：目前的 ID 是 [${targetGroup}]。LINE 的群組 ID 絕對不會有橫槓，且必須是大寫 C 開頭！`);
-    return res.status(400).json({ 
-      error: '群組 ID 格式錯誤', 
-      message: '請在 LINE 群組輸入「找id」來獲取正確的 C 開頭代碼' 
-    });
+  if (!targetGroup.startsWith('C')) {
+    console.error(`🚨 ID 格式錯誤：[${targetGroup}]`);
+    return res.status(400).json({ error: '群組 ID 格式錯誤' });
   }
 
   try {
@@ -64,7 +55,7 @@ export default async function handler(req: any, res: any) {
       }
     };
 
-    // 發送推播到正確的群組
+    // 發送推播到寫死的群組
     await client.pushMessage(targetGroup, [
       { type: "text", text: `歡迎 ${gameName} 加入我們的拔草行列！🌱` },
       welcomeMessage

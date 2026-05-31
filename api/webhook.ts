@@ -1,87 +1,71 @@
-function getMushroomPanelFlex(): line.FlexBubble {
-  return {
-    type: "bubble",
-    size: "kilo",
-    header: {
-      type: "box", layout: "vertical", backgroundColor: "#EF4444", paddingAll: "12px",
-      contents: [
-        { type: "text", text: "🍄 蘑菇任務中心", color: "#ffffff", weight: "bold", size: "md", align: "center" }
-      ]
-    },
-    body: {
-      type: "box", layout: "vertical", paddingAll: "20px", spacing: "md", backgroundColor: "#ffffff",
-      contents: [
-        { type: "text", text: "請選擇要執行的動作", size: "sm", color: "#6B7280", align: "center" }
-      ]
-    },
-    footer: {
-      type: "box", layout: "vertical", paddingAll: "16px", spacing: "sm",
-      contents: [
-        {
-          type: "button", style: "primary", color: "#EF4444", height: "sm",
-          action: { type: "uri", label: "發起招募", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=recruit` }
-        },
-        {
-          type: "button", style: "secondary", color: "#E5E7EB", height: "sm",
-          action: { type: "uri", label: "手動計時器", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=timer` }
-        }
-      ]
-    }
-  };
-}
+import * as line from '@line/bot-sdk';
 
-function getWelcomeFlex(): line.FlexBubble {
-  return {
-    type: "bubble",
-    size: "kilo",
-    header: {
-      type: "box", layout: "vertical", backgroundColor: "#3B82F6", paddingAll: "12px",
-      contents: [
-        { type: "text", text: "👋 歡迎加入群組", color: "#ffffff", weight: "bold", size: "md", align: "center" }
-      ]
-    },
-    body: {
-      type: "box", layout: "vertical", paddingAll: "20px", backgroundColor: "#ffffff",
-      contents: [
-        { type: "text", text: "打菇前，請先建立你的檔案！", color: "#374151", weight: "bold", size: "sm", align: "center" }
-      ]
-    },
-    footer: {
-      type: "box", layout: "vertical", paddingAll: "16px",
-      contents: [
-        {
-          type: "button", style: "primary", color: "#3B82F6", height: "sm",
-          action: { type: "uri", label: "綁定遊戲名稱", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=bind` }
-        }
-      ]
-    }
-  };
-}
+const client = new line.Client({
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+});
 
-function getNotificationFlex(): line.FlexBubble {
-  return {
-    type: "bubble",
-    size: "kilo",
-    header: {
-      type: "box", layout: "vertical", backgroundColor: "#8B5CF6", paddingAll: "12px",
-      contents: [
-        { type: "text", text: "⚙️ 系統設定", color: "#ffffff", weight: "bold", size: "md", align: "center" }
-      ]
-    },
-    body: {
-      type: "box", layout: "vertical", paddingAll: "20px", backgroundColor: "#ffffff",
-      contents: [
-        { type: "text", text: "太吵了嗎？來調整通知吧！", color: "#374151", weight: "bold", size: "sm", align: "center" }
-      ]
-    },
-    footer: {
-      type: "box", layout: "vertical", paddingAll: "16px",
-      contents: [
-        {
-          type: "button", style: "primary", color: "#8B5CF6", height: "sm",
-          action: { type: "uri", label: "前往設定", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=notify` }
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  try {
+    const events = req.body.events;
+    for (const event of events) {
+      if (event.type === 'message' && event.message.type === 'text') {
+        const text = event.message.text.trim();
+
+        // 🟢 指令：菇
+        if (text === '菇') {
+          const mushroomFlex: line.FlexMessage = {
+            type: "flex", altText: "🍄 招募面板",
+            contents: {
+              type: "bubble", size: "kilo",
+              body: {
+                type: "box", layout: "vertical", paddingAll: "24px",
+                contents: [
+                  { type: "text", text: "Mushroom Task", weight: "bold", size: "sm", color: "#9CA3AF" },
+                  { type: "text", text: "招募面板", weight: "bold", size: "xxl", color: "#111827", margin: "sm" },
+                  {
+                    type: "box", layout: "vertical", margin: "xxl", spacing: "md",
+                    contents: [
+                      { type: "button", style: "primary", color: "#111827", action: { type: "uri", label: "發起招募", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=recruit` } },
+                      { type: "button", style: "secondary", color: "#F3F4F6", action: { type: "uri", label: "手動計時", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=timer` } }
+                    ]
+                  }
+                ]
+              }
+            }
+          };
+          await client.replyMessage(event.replyToken, [mushroomFlex]);
         }
-      ]
+
+        // 🟢 指令：通知
+        if (text === '通知') {
+          const notifyFlex: line.FlexMessage = {
+            type: "flex", altText: "⚙️ 通知設定",
+            contents: {
+              type: "bubble", size: "kilo",
+              body: {
+                type: "box", layout: "vertical", paddingAll: "24px",
+                contents: [
+                  { type: "text", text: "Settings", weight: "bold", size: "sm", color: "#9CA3AF" },
+                  { type: "text", text: "通知設定", weight: "bold", size: "xxl", color: "#111827", margin: "sm" },
+                  {
+                    type: "box", layout: "vertical", margin: "xxl",
+                    contents: [
+                      { type: "button", style: "primary", color: "#111827", action: { type: "uri", label: "管理個人設定", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=notify` } }
+                    ]
+                  }
+                ]
+              }
+            }
+          };
+          await client.replyMessage(event.replyToken, [notifyFlex]);
+        }
+      }
     }
-  };
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Webhook Error:', error);
+    res.status(500).end();
+  }
 }

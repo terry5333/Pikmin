@@ -1,6 +1,4 @@
 import * as line from '@line/bot-sdk';
-// 如果目前還沒完全串接 Firebase，請暫時把底下這行註解掉，確保程式不會報錯
-// import { db } from './firebase-admin.js'; 
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
@@ -11,11 +9,24 @@ export default async function handler(req: any, res: any) {
   
   const { groupId, userId, lineName, pictureUrl, gameName } = req.body;
   
-  // 🔥 關鍵修復：如果前端因為隱私設定抓不到群組 ID，強制使用全域變數的群組 ID
+  // 取得群組 ID
   const targetGroup = groupId || process.env.TARGET_GROUP_ID;
 
+  // 🚨 防呆機制：檢查群組 ID 格式是否正確
+  if (!targetGroup) {
+    console.error('錯誤：找不到任何群組 ID');
+    return res.status(400).json({ error: '找不到群組 ID，請確認 Vercel 設定' });
+  }
+  
+  if (targetGroup.includes('-') || !targetGroup.startsWith('C')) {
+    console.error(`🚨 嚴重的格式錯誤：目前的 ID 是 [${targetGroup}]。LINE 的群組 ID 絕對不會有橫槓，且必須是大寫 C 開頭！`);
+    return res.status(400).json({ 
+      error: '群組 ID 格式錯誤', 
+      message: '請在 LINE 群組輸入「找id」來獲取正確的 C 開頭代碼' 
+    });
+  }
+
   try {
-    // 準備要傳送的歡迎卡片
     const welcomeMessage: line.FlexMessage = {
       type: "flex",
       altText: `新成員 ${gameName} 綁定完成囉！`,
@@ -53,19 +64,16 @@ export default async function handler(req: any, res: any) {
       }
     };
 
-    if (targetGroup) {
-      await client.pushMessage(targetGroup, [
-        { type: "text", text: `歡迎 ${gameName} 加入我們的拔草行列！🌱` },
-        welcomeMessage
-      ]);
-    } else {
-      console.warn('⚠️ 找不到 targetGroup，因此沒有傳送群組訊息。請檢查 Vercel 的 TARGET_GROUP_ID。');
-    }
+    // 發送推播到正確的群組
+    await client.pushMessage(targetGroup, [
+      { type: "text", text: `歡迎 ${gameName} 加入我們的拔草行列！🌱` },
+      welcomeMessage
+    ]);
     
     res.status(200).json({ success: true });
 
   } catch (error) {
-    console.error('綁定處理失敗:', error);
-    res.status(500).json({ error: 'Failed to bind user or push message' });
+    console.error('發送 LINE 訊息失敗:', error);
+    res.status(500).json({ error: 'Failed to push message to LINE' });
   }
 }

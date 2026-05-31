@@ -1,5 +1,5 @@
 import * as line from '@line/bot-sdk';
-import { db } from './firebase-admin.js'; // 必須加上 .js
+import { db } from './firebase-admin.js'; 
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -23,7 +23,8 @@ export default async function handler(req, res) {
       type: "bubble",
       hero: {
         type: "image",
-        url: "https://pikmin-0.vercel.app/recruit.jpg", // ⚠️ 替換為實際網址
+        // ✨ 已經幫你替換成你的專屬 Vercel 網址與 .png 副檔名
+        url: "https://pikmin-0.vercel.app/recruit.png",
         size: "full",
         aspectRatio: "20:13",
         aspectMode: "cover"

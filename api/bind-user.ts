@@ -1,5 +1,5 @@
 import * as line from '@line/bot-sdk';
-import { db } from './firebase-admin'; // 確保你有這個 Firebase 連線檔案
+import { db } from './firebase-admin.ts'; // 確保你有這個 Firebase 連線檔案
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',

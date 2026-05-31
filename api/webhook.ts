@@ -1,127 +1,29 @@
-import * as line from '@line/bot-sdk';
-
-const config = {
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
-  channelSecret: process.env.LINE_CHANNEL_SECRET || '',
-};
-
-const client = new line.Client(config);
-
-// 在 Vercel Serverless 函數中，req 和 res 的基礎型別
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') return res.status(405).end();
-  
-  try {
-    const events: line.WebhookEvent[] = req.body.events;
-    await Promise.all(events.map(handleEvent));
-    res.status(200).json({ message: 'ok' });
-  } catch (err) {
-    console.error('Webhook 處理失敗:', err);
-    res.status(500).end();
-  }
-}
-
-async function handleEvent(event: line.WebhookEvent) {
-  // 1. 新人加入群組事件
-  if (event.type === 'memberJoined') {
-    return client.replyMessage(event.replyToken, {
-      type: 'flex',
-      altText: '歡迎加入！請綁定遊戲名稱',
-      contents: getWelcomeFlex()
-    });
-  }
-
-  // 確保是文字訊息才繼續處理
-  if (event.type !== 'message' || event.message.type !== 'text') return null;
-  const text = event.message.text.trim();
-
-  // 2. 隱藏指令：找群組 ID (用於設定排程推播)
-  if (text === '找id') {
-    // 在 TypeScript 中安全地取得 groupId 或 roomId
-    const source = event.source;
-    let targetId = null;
-    if (source.type === 'group') targetId = source.groupId;
-    if (source.type === 'room') targetId = source.roomId;
-
-    if (targetId) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text', 
-        text: `這個群組的 ID 是：\n${targetId}\n\n請把它複製貼到 Vercel 的 TARGET_GROUP_ID 環境變數中。`
-      });
-    } else {
-      return client.replyMessage(event.replyToken, { 
-        type: 'text', 
-        text: '請在「群組」內輸入此指令，單線對話無法取得群組 ID 喔！' 
-      });
-    }
-  }
-
-  // 3. 觸發蘑菇總控制面板
-  if (text === '菇') {
-    return client.replyMessage(event.replyToken, {
-      type: 'flex',
-      altText: '🍄 蘑菇面板',
-      contents: getMushroomPanelFlex()
-    });
-  }
-
-  // 4. 觸發個人化通知設定
-  if (text === '通知') {
-    return client.replyMessage(event.replyToken, {
-      type: 'flex',
-      altText: '⚙️ 通知設定',
-      contents: getNotificationFlex()
-    });
-  }
-}
-
-// ==========================================
-// 🎨 Flex Message 樣板生成區 (回傳 line.FlexBubble 型別)
-// 網址已替換為 pikmin-0.vercel.app，副檔名為 .png
-// ==========================================
-
 function getMushroomPanelFlex(): line.FlexBubble {
   return {
     type: "bubble",
     size: "kilo",
-    hero: {
-      type: "image",
-      url: "https://pikmin-0.vercel.app/panel.png", 
-      size: "full",
-      aspectRatio: "20:13",
-      aspectMode: "cover"
+    header: {
+      type: "box", layout: "vertical", backgroundColor: "#EF4444", paddingAll: "12px",
+      contents: [
+        { type: "text", text: "🍄 蘑菇任務中心", color: "#ffffff", weight: "bold", size: "md", align: "center" }
+      ]
     },
     body: {
-      type: "box",
-      layout: "vertical",
-      spacing: "md",
+      type: "box", layout: "vertical", paddingAll: "20px", spacing: "md", backgroundColor: "#ffffff",
       contents: [
-        { type: "text", text: "🍄 蘑菇控制中心", weight: "bold", size: "xl", align: "center" }
+        { type: "text", text: "請選擇要執行的動作", size: "sm", color: "#6B7280", align: "center" }
       ]
     },
     footer: {
-      type: "box",
-      layout: "vertical",
-      spacing: "sm",
+      type: "box", layout: "vertical", paddingAll: "16px", spacing: "sm",
       contents: [
         {
-          type: "button",
-          style: "primary",
-          color: "#ff5252",
-          action: {
-            type: "uri",
-            label: "發起招募",
-            uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=recruit`
-          }
+          type: "button", style: "primary", color: "#EF4444", height: "sm",
+          action: { type: "uri", label: "發起招募", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=recruit` }
         },
         {
-          type: "button",
-          style: "secondary",
-          action: {
-            type: "uri",
-            label: "手動計時器",
-            uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=timer`
-          }
+          type: "button", style: "secondary", color: "#E5E7EB", height: "sm",
+          action: { type: "uri", label: "手動計時器", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=timer` }
         }
       ]
     }
@@ -131,34 +33,25 @@ function getMushroomPanelFlex(): line.FlexBubble {
 function getWelcomeFlex(): line.FlexBubble {
   return {
     type: "bubble",
-    hero: {
-      type: "image",
-      url: "https://pikmin-0.vercel.app/welcome.png", 
-      size: "full",
-      aspectRatio: "16:9",
-      aspectMode: "cover"
+    size: "kilo",
+    header: {
+      type: "box", layout: "vertical", backgroundColor: "#3B82F6", paddingAll: "12px",
+      contents: [
+        { type: "text", text: "👋 歡迎加入群組", color: "#ffffff", weight: "bold", size: "md", align: "center" }
+      ]
     },
     body: {
-      type: "box",
-      layout: "vertical",
+      type: "box", layout: "vertical", paddingAll: "20px", backgroundColor: "#ffffff",
       contents: [
-        { type: "text", text: "歡迎加入群組！🌱", weight: "bold", size: "xl", align: "center" },
-        { type: "text", text: "請先綁定遊戲名稱喔！", color: "#666666", size: "sm", align: "center", margin: "md" }
+        { type: "text", text: "打菇前，請先建立你的檔案！", color: "#374151", weight: "bold", size: "sm", align: "center" }
       ]
     },
     footer: {
-      type: "box",
-      layout: "vertical",
+      type: "box", layout: "vertical", paddingAll: "16px",
       contents: [
         {
-          type: "button",
-          style: "primary",
-          color: "#4CAF50",
-          action: {
-            type: "uri",
-            label: "綁定名稱",
-            uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=bind`
-          }
+          type: "button", style: "primary", color: "#3B82F6", height: "sm",
+          action: { type: "uri", label: "綁定遊戲名稱", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=bind` }
         }
       ]
     }
@@ -168,25 +61,25 @@ function getWelcomeFlex(): line.FlexBubble {
 function getNotificationFlex(): line.FlexBubble {
   return {
     type: "bubble",
-    body: {
-      type: "box",
-      layout: "vertical",
+    size: "kilo",
+    header: {
+      type: "box", layout: "vertical", backgroundColor: "#8B5CF6", paddingAll: "12px",
       contents: [
-        { type: "text", text: "⚙️ 個人化通知設定", weight: "bold", size: "lg", align: "center" }
+        { type: "text", text: "⚙️ 系統設定", color: "#ffffff", weight: "bold", size: "md", align: "center" }
+      ]
+    },
+    body: {
+      type: "box", layout: "vertical", paddingAll: "20px", backgroundColor: "#ffffff",
+      contents: [
+        { type: "text", text: "太吵了嗎？來調整通知吧！", color: "#374151", weight: "bold", size: "sm", align: "center" }
       ]
     },
     footer: {
-      type: "box",
-      layout: "vertical",
+      type: "box", layout: "vertical", paddingAll: "16px",
       contents: [
         {
-          type: "button",
-          style: "primary",
-          action: {
-            type: "uri",
-            label: "前往設定",
-            uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=notify`
-          }
+          type: "button", style: "primary", color: "#8B5CF6", height: "sm",
+          action: { type: "uri", label: "前往設定", uri: `https://liff.line.me/${process.env.VITE_LIFF_ID}?page=notify` }
         }
       ]
     }

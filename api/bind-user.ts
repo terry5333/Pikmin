@@ -1,5 +1,5 @@
 import * as line from '@line/bot-sdk';
-import { db } from './firebase-admin.js'; // 確保你有這個 Firebase 連線檔案
+import { db } from './firebase-admin.js'; 
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
@@ -11,21 +11,27 @@ export default async function handler(req: any, res: any) {
   const { userId, lineName, pictureUrl, gameName } = req.body;
   const targetGroup = 'C37559d3c9937e6c7d230f2fa5383edf0';
 
+  // 🔍 紀錄：確認伺服器有收到前端傳來的資料
+  console.log(`[System] 準備寫入玩家資料: ${gameName} (ID: ${userId})`);
+
   try {
-    // 🗄️ 1. 真正寫入資料到 Firebase
+    // 🗄️ 寫入 Firebase
     await db.collection('users').doc(userId).set({
       lineName,
       gameName,
       pictureUrl,
       groupId: targetGroup,
       notifications: {
-        mushroom: true, // 預設開啟蘑菇通知
-        daily: true     // 預設開啟大聲公通知
+        mushroom: true,
+        daily: true
       },
       updatedAt: new Date().toISOString()
     }, { merge: true });
 
-    // 🎨 2. 全新高質感實體 Flex Message
+    // 🔍 紀錄：確認寫入成功
+    console.log('[System] Firebase 寫入成功！準備發送 LINE 訊息...');
+
+    // 🎨 高質感實體 Flex Message
     const welcomeMessage: line.FlexMessage = {
       type: "flex",
       altText: `新成員 ${gameName} 綁定完成囉！`,
@@ -68,7 +74,13 @@ export default async function handler(req: any, res: any) {
       }
     };
 
-    await client.pushMessage(targetGroup, [welcomeMessage]);
+    await client.pushMessage(targetGroup, [
+      { type: "text", text: `歡迎 ${gameName} 加入我們的拔草行列！🌱` },
+      welcomeMessage
+    ]);
+    
+    // 🔍 紀錄：確認推播成功
+    console.log('[System] LINE 訊息發送成功！完美結案！');
     res.status(200).json({ success: true });
 
   } catch (error: any) {

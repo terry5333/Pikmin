@@ -9,14 +9,13 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).end();
   
   const { userId, lineName, pictureUrl, gameName } = req.body;
-  const targetGroup = 'C37559d3c9937e6c7d230f2fa5383edf0';
+  const targetGroup = process.env.TARGET_GROUP_ID || 'C37559d3c9937e6c7d230f2fa5383edf0';
 
-  // 🔍 紀錄：確認伺服器有收到前端傳來的資料
-  console.log(`[System] 準備寫入玩家資料: ${gameName} (ID: ${userId})`);
+  console.log(`[System] 準備寫入玩家資料 (RTDB): ${gameName} (ID: ${userId})`);
 
   try {
-    // 🗄️ 寫入 Firebase
-    await db.collection('users').doc(userId).set({
+    // 🗄️ 寫入 Firebase Realtime Database
+    await db.ref(`users/${userId}`).update({
       lineName,
       gameName,
       pictureUrl,
@@ -26,10 +25,9 @@ export default async function handler(req: any, res: any) {
         daily: true
       },
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    });
 
-    // 🔍 紀錄：確認寫入成功
-    console.log('[System] Firebase 寫入成功！準備發送 LINE 訊息...');
+    console.log('[System] RTDB 寫入成功！準備發送 LINE 訊息...');
 
     // 🎨 高質感實體 Flex Message
     const welcomeMessage: line.FlexMessage = {
@@ -79,7 +77,6 @@ export default async function handler(req: any, res: any) {
       welcomeMessage
     ]);
     
-    // 🔍 紀錄：確認推播成功
     console.log('[System] LINE 訊息發送成功！完美結案！');
     res.status(200).json({ success: true });
 

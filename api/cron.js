@@ -1,49 +1,42 @@
 import * as line from '@line/bot-sdk';
-// import { db } from './firebase-admin.js'; // 如果未來你需要從 RTDB 讀取特定玩家資料，可以把這行打開
 
 const client = new line.Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
 });
 
 export default async function handler(req: any, res: any) {
-  // 🔒 安全防護：確保這支 API 只有 Vercel 的 Cron 系統能呼叫，不會被路人亂打
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    console.error('[Cron] 授權失敗：缺少或錯誤的 CRON_SECRET');
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // 讀取我們設定好的群組 ID
+  // ⚠️ 確保這裡的群組 ID 是對的
   const targetGroup = process.env.TARGET_GROUP_ID || 'C37559d3c9937e6c7d230f2fa5383edf0';
 
   try {
-    console.log('[Cron] 開始執行每日推播任務...');
-
-    // 🎨 高質感的每日提醒 Flex Message
     const dailyReminder: line.FlexMessage = {
       type: "flex",
-      altText: "🌞 早安！皮克敏每日任務提醒",
+      altText: "🌞 午夜結算與早安提醒",
       contents: {
         type: "bubble",
         size: "kilo",
         body: {
-          type: "box", layout: "vertical", paddingAll: "20px", spacing: "md",
+          type: "box", layout: "vertical", paddingAll: "24px",
           contents: [
-            { type: "text", text: "🌞 早安皮克敏！", weight: "bold", size: "xl", color: "#059669" },
-            { type: "text", text: "又是適合種花的一天 🌸\n別忘了今天的：\n\n🍄 3 次免費菇菇額度\n📡 探測器免費用 1 次\n🚶‍♂️ 出門散步解任務", wrap: true, color: "#4B5563", size: "md" }
+            { type: "text", text: "Daily Update", weight: "bold", size: "sm", color: "#9CA3AF" },
+            { type: "text", text: "新的一天開始囉 🌸", weight: "bold", size: "xl", color: "#111827", margin: "sm" },
+            { type: "separator", margin: "xl", color: "#F3F4F6" },
+            { type: "text", text: "🍄 免費菇菇額度已重置\n📡 探測器可再次使用", wrap: true, color: "#4B5563", size: "sm", margin: "xl", lineSpacing: "6px" }
           ]
         }
       }
     };
 
-    // 🚀 發送訊息到群組
     await client.pushMessage(targetGroup, [dailyReminder]);
-    
-    console.log('[Cron] 每日推播發送成功！');
-    res.status(200).json({ success: true, message: 'Cron job executed successfully' });
-
+    res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('[Cron] 處理失敗:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // 如果按 Run 沒反應，請去 Vercel 的 Logs 看這行印出什麼！
+    console.error('Cron 發送失敗:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Cron failed' });
   }
 }

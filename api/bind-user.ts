@@ -7,15 +7,10 @@ const client = new line.Client({
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).end();
   
-  const { groupId, userId, lineName, pictureUrl, gameName } = req.body;
+  const { userId, lineName, pictureUrl, gameName } = req.body;
   
-  // 🔥 終極物理防禦：直接寫死你截圖裡的正確群組 ID，完全不依賴 process.env
-  const targetGroup = groupId || 'C37559d3c9937e6c7d230f2fa5383edf0';
-
-  if (!targetGroup.startsWith('C')) {
-    console.error(`🚨 ID 格式錯誤：[${targetGroup}]`);
-    return res.status(400).json({ error: '群組 ID 格式錯誤' });
-  }
+  // 🌟 終極鎖死：把 groupId || 拿掉，不管網頁在哪裡打開，一律只發到這個群組！
+  const targetGroup = 'C37559d3c9937e6c7d230f2fa5383edf0';
 
   try {
     const welcomeMessage: line.FlexMessage = {
@@ -55,7 +50,6 @@ export default async function handler(req: any, res: any) {
       }
     };
 
-    // 發送推播到寫死的群組
     await client.pushMessage(targetGroup, [
       { type: "text", text: `歡迎 ${gameName} 加入我們的拔草行列！🌱` },
       welcomeMessage

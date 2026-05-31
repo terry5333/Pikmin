@@ -1,15 +1,18 @@
 import * as line from '@line/bot-sdk';
 
-const client = new line.Client({
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.LINE_CHANNEL_SECRET,
-});
+const config = {
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+  channelSecret: process.env.LINE_CHANNEL_SECRET || '',
+};
 
-export default async function handler(req, res) {
+const client = new line.Client(config);
+
+// 在 Vercel Serverless 函數中，req 和 res 的基礎型別
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).end();
   
   try {
-    const events = req.body.events;
+    const events: line.WebhookEvent[] = req.body.events;
     await Promise.all(events.map(handleEvent));
     res.status(200).json({ message: 'ok' });
   } catch (err) {
@@ -18,7 +21,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function handleEvent(event) {
+async function handleEvent(event: line.WebhookEvent) {
   // 1. 新人加入群組事件
   if (event.type === 'memberJoined') {
     return client.replyMessage(event.replyToken, {
@@ -34,11 +37,16 @@ async function handleEvent(event) {
 
   // 2. 隱藏指令：找群組 ID (用於設定排程推播)
   if (text === '找id') {
-    const groupId = event.source.groupId;
-    if (groupId) {
+    // 在 TypeScript 中安全地取得 groupId 或 roomId
+    const source = event.source;
+    let targetId = null;
+    if (source.type === 'group') targetId = source.groupId;
+    if (source.type === 'room') targetId = source.roomId;
+
+    if (targetId) {
       return client.replyMessage(event.replyToken, {
         type: 'text', 
-        text: `這個群組的 ID 是：\n${groupId}\n\n請把它複製貼到 Vercel 的 TARGET_GROUP_ID 環境變數中。`
+        text: `這個群組的 ID 是：\n${targetId}\n\n請把它複製貼到 Vercel 的 TARGET_GROUP_ID 環境變數中。`
       });
     } else {
       return client.replyMessage(event.replyToken, { 
@@ -68,17 +76,17 @@ async function handleEvent(event) {
 }
 
 // ==========================================
-// 🎨 Flex Message 樣板生成區
-// ⚠️ 注意：請確保 hero.url 的網址換成你 Vercel 上的真實圖片網址
+// 🎨 Flex Message 樣板生成區 (回傳 line.FlexBubble 型別)
+// 網址已替換為 pikmin-0.vercel.app，副檔名為 .png
 // ==========================================
 
-function getMushroomPanelFlex() {
+function getMushroomPanelFlex(): line.FlexBubble {
   return {
     type: "bubble",
     size: "kilo",
     hero: {
       type: "image",
-      url: "https://pikmin-0.vercel.app/panel.jpg", // 替換為實際網址
+      url: "https://pikmin-0.vercel.app/panel.png", 
       size: "full",
       aspectRatio: "20:13",
       aspectMode: "cover"
@@ -120,12 +128,12 @@ function getMushroomPanelFlex() {
   };
 }
 
-function getWelcomeFlex() {
+function getWelcomeFlex(): line.FlexBubble {
   return {
     type: "bubble",
     hero: {
       type: "image",
-      url: "https://pikmin-0.vercel.app/welcome.jpg", // 替換為實際網址
+      url: "https://pikmin-0.vercel.app/welcome.png", 
       size: "full",
       aspectRatio: "16:9",
       aspectMode: "cover"
@@ -157,7 +165,7 @@ function getWelcomeFlex() {
   };
 }
 
-function getNotificationFlex() {
+function getNotificationFlex(): line.FlexBubble {
   return {
     type: "bubble",
     body: {

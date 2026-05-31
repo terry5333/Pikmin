@@ -78,7 +78,7 @@ function getMushroomPanelFlex() {
     size: "kilo",
     hero: {
       type: "image",
-      url: "https://你的專案名稱.vercel.app/panel.jpg", // 替換為實際網址
+      url: "https://pikmin-0.vercel.app/panel.jpg", // 替換為實際網址
       size: "full",
       aspectRatio: "20:13",
       aspectMode: "cover"
@@ -125,7 +125,7 @@ function getWelcomeFlex() {
     type: "bubble",
     hero: {
       type: "image",
-      url: "https://你的專案名稱.vercel.app/welcome.jpg", // 替換為實際網址
+      url: "https://pikmin-0.vercel.app/welcome.jpg", // 替換為實際網址
       size: "full",
       aspectRatio: "16:9",
       aspectMode: "cover"

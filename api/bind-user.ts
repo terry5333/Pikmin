@@ -9,7 +9,7 @@ export default async function handler(req: any, res: any) {
   
   const { userId, lineName, pictureUrl, gameName } = req.body;
   
-  // 🌟 終極鎖死：把 groupId || 拿掉，不管網頁在哪裡打開，一律只發到這個群組！
+  // 🌟 已經確認 100% 正確的群組 ID
   const targetGroup = 'C37559d3c9937e6c7d230f2fa5383edf0';
 
   try {
@@ -32,7 +32,8 @@ export default async function handler(req: any, res: any) {
             {
               type: "box", layout: "horizontal", spacing: "md", alignItems: "center", margin: "lg",
               contents: [
-                { type: "image", url: pictureUrl, size: "sm", flex: 0, style: "circular" },
+                // 🚨 修正：移除了會導致 400 錯誤的 style: "circular"
+                { type: "image", url: pictureUrl, size: "sm", flex: 0 },
                 {
                   type: "box", layout: "vertical",
                   contents: [
@@ -57,8 +58,9 @@ export default async function handler(req: any, res: any) {
     
     res.status(200).json({ success: true });
 
-  } catch (error) {
-    console.error('發送 LINE 訊息失敗:', error);
+  } catch (error: any) {
+    // 🔥 升級版錯誤捕捉：直接印出 LINE 官方的詳細退回理由
+    console.error('發送 LINE 訊息失敗，詳細原因:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to push message to LINE' });
   }
 }

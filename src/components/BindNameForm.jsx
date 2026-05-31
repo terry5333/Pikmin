@@ -9,6 +9,7 @@ export default function BindNameForm({ profile }) {
     e.preventDefault();
     if (!gameName.trim()) return;
     setIsSubmitting(true);
+    
     const context = liff.getContext();
     
     try {
@@ -23,52 +24,56 @@ export default function BindNameForm({ profile }) {
           gameName: gameName.trim()
         })
       });
+      
+      // 成功後關閉視窗
       liff.closeWindow();
     } catch (error) {
       console.error(error);
       setIsSubmitting(false);
-      alert("綁定發生錯誤，請重試！");
+      alert("綁定發生錯誤，請稍後再試！");
     }
   };
 
   return (
-    /* 純白實體卡片，去除透明度 */
-    <div className="bg-white shadow-xl rounded-[32px] overflow-hidden border border-gray-100 max-w-sm mx-auto">
+    /* 完全不透明的純白實心卡片，搭配淺灰邊框 */
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 max-w-sm mx-auto p-8">
       
-      {/* 活潑的頂部橫幅設計 */}
-      <div className="h-32 w-full bg-green-100 relative">
-         <img src="/welcome.png" alt="Banner" className="w-full h-full object-cover" />
-         <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
-            <img src={profile.pictureUrl} alt="Avatar" className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-white" />
-         </div>
+      <div className="flex flex-col items-center mb-8">
+        <img 
+          src={profile.pictureUrl} 
+          alt="Avatar" 
+          className="w-20 h-20 rounded-full mb-4 border border-gray-200 object-cover" 
+        />
+        <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
+          哈囉, {profile.displayName}
+        </h2>
+        <p className="text-sm text-gray-500 mt-2 text-center">
+          請輸入你的皮克敏遊戲暱稱
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-8 pt-14 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-black text-gray-800">哈囉, {profile.displayName}</h2>
-          <p className="text-sm text-gray-500 mt-2 font-medium">幫自己取個響亮的皮克敏名字吧！<br/>這樣大家打菇才認得你喔 🍄</p>
-        </div>
-        
-        <div className="space-y-3">
-          <label className="block text-sm font-bold text-gray-700 pl-2">遊戲內暱稱</label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            遊戲內暱稱
+          </label>
           <input 
             type="text" 
             required 
-            placeholder="例如：台北皮克敏大師" 
-            className="w-full bg-gray-50 p-4 rounded-2xl border-2 border-gray-200 outline-none text-gray-800 font-bold placeholder-gray-400 focus:ring-4 focus:ring-green-100 focus:border-green-400 transition-all" 
+            placeholder="例如：皮克敏大師" 
+            className="w-full bg-gray-50 p-4 rounded-xl border border-gray-300 outline-none text-gray-800 font-medium placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors" 
             value={gameName} 
             onChange={e => setGameName(e.target.value)} 
             disabled={isSubmitting} 
           />
         </div>
 
-        {/* 立體感遊戲按鈕 */}
         <button 
           type="submit" 
           disabled={isSubmitting} 
-          className="w-full bg-[#4CAF50] hover:bg-[#43a047] text-white font-black text-lg py-4 rounded-[24px] shadow-[0_4px_0_0_#2e7d32] active:shadow-none active:translate-y-1 transition-all mt-4 disabled:opacity-50 disabled:active:shadow-[0_4px_0_0_#2e7d32] disabled:active:translate-y-0"
+          className="w-full bg-[#4CAF50] hover:bg-[#43a047] text-white font-bold text-lg py-4 rounded-xl transition-colors disabled:opacity-50"
         >
-          {isSubmitting ? '綁定中...' : '確認綁定 🚀'}
+          {isSubmitting ? '綁定中...' : '確認綁定'}
         </button>
       </form>
     </div>
